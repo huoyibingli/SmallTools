@@ -30,7 +30,7 @@
         {
             this.btnRename = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.txtDicPath = new System.Windows.Forms.TextBox();
             this.btnSelectPath = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -42,6 +42,7 @@
             this.btnRename.TabIndex = 0;
             this.btnRename.Text = "Change";
             this.btnRename.UseVisualStyleBackColor = true;
+            this.btnRename.Click += new System.EventHandler(this.btnRename_Click);
             // 
             // label1
             // 
@@ -52,12 +53,12 @@
             this.label1.TabIndex = 1;
             this.label1.Text = "路径：";
             // 
-            // textBox1
+            // txtDicPath
             // 
-            this.textBox1.Location = new System.Drawing.Point(120, 79);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(399, 21);
-            this.textBox1.TabIndex = 2;
+            this.txtDicPath.Location = new System.Drawing.Point(120, 79);
+            this.txtDicPath.Name = "txtDicPath";
+            this.txtDicPath.Size = new System.Drawing.Size(399, 21);
+            this.txtDicPath.TabIndex = 2;
             // 
             // btnSelectPath
             // 
@@ -67,6 +68,7 @@
             this.btnSelectPath.TabIndex = 3;
             this.btnSelectPath.Text = "选择路径";
             this.btnSelectPath.UseVisualStyleBackColor = true;
+            this.btnSelectPath.Click += new System.EventHandler(this.btnSelectPath_Click);
             // 
             // Form1
             // 
@@ -74,11 +76,12 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(601, 231);
             this.Controls.Add(this.btnSelectPath);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.txtDicPath);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnRename);
             this.Name = "Form1";
             this.Text = "Form1";
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -88,7 +91,7 @@
 
         private System.Windows.Forms.Button btnRename;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox txtDicPath;
         private System.Windows.Forms.Button btnSelectPath;
     }
 }
