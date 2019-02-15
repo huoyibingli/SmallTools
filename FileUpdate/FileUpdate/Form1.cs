@@ -18,11 +18,22 @@ namespace FileUpdate
             InitializeComponent();
         }
 
+        public static bool _initialized = false;
+        public static log4net.ILog log;
+        private int fileCount;
+
+
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            InitLog();
+            fileCount = 0;
+            txtFileDir.Text = @"G:\huoyibingli\pictures";
+            txtBackupDir.Text = @"G:\backup\huoyibingli\pictures";
+            txtUpdateDir.Text = @"G:\picupdate";
         }
 
+        #region "Select Dictionary"
+        
         private void Button2_Click(object sender, EventArgs e)
         {
             System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
@@ -34,7 +45,7 @@ namespace FileUpdate
                     MessageBox.Show(this, "文件夹路径不能为空", "提示");
                     return;
                 }
-                this.textBox1.Text = dialog.SelectedPath;
+                this.txtFileDir.Text = dialog.SelectedPath;
             }
         }
 
@@ -49,7 +60,7 @@ namespace FileUpdate
                     MessageBox.Show(this, "文件夹路径不能为空", "提示");
                     return;
                 }
-                this.textBox2.Text = dialog.SelectedPath;
+                this.txtBackupDir.Text = dialog.SelectedPath;
             }
         }
 
@@ -64,39 +75,109 @@ namespace FileUpdate
                     MessageBox.Show(this, "文件夹路径不能为空", "提示");
                     return;
                 }
-                this.textBox3.Text = dialog.SelectedPath;
+                this.txtUpdateDir.Text = dialog.SelectedPath;
             }
         }
+
+        #endregion
 
         private void Button1_Click(object sender, EventArgs e)
         {
+            CompareDirectory(txtFileDir.Text);
+            MessageBox.Show("更新完毕!共 " + fileCount + " 个文件");
+            fileCount = 0;
+        }
 
+        public void CompareDirectory(string dic)
+        {
+            string newDic = dic.Replace(txtFileDir.Text, "");
+            CompareFile(newDic.TrimStart('\\'));
+            DirectoryInfo root = new DirectoryInfo(Path.Combine(dic));
+            foreach (DirectoryInfo directory in root.GetDirectories())
+            {
+                CompareDirectory(directory.FullName);
+            }
+        }
+
+        private void CompareFile(string dic)
+        {
+            DirectoryInfo root = new DirectoryInfo(Path.Combine(txtFileDir.Text, dic));
+            foreach (FileInfo file in root.GetFiles())
+            {
+                string backupFilePath = Path.Combine(txtBackupDir.Text, dic, file.Name);
+                if (File.Exists(backupFilePath) == false)
+                {
+                    CopyFile(dic, file.Name);
+                }
+            }
+        }
+
+        private void CopyFile(string dic, string fileName)
+        {
+            if (Directory.Exists(Path.Combine(txtBackupDir.Text, dic)) == false)
+            {
+                CreateDirectory(txtBackupDir.Text, dic);
+            }
+
+            if (Directory.Exists(Path.Combine(txtUpdateDir.Text, dic)) == false)
+            {
+                CreateDirectory(txtUpdateDir.Text, dic);
+            }
+
+            string filePath = Path.Combine(txtFileDir.Text, dic, fileName);
+            string backupPath = Path.Combine(txtBackupDir.Text, dic, fileName);
+            string updatePath = Path.Combine(txtUpdateDir.Text, dic, fileName);
+
+            File.Copy(filePath, backupPath);
+            File.Copy(filePath, updatePath);
+            fileCount++;
+            log.Info("Copy File : " + filePath);
         }
 
         /// <summary>
-        /// 获取路径下所有文件以及子文件夹中文件
+        /// 判断文件的目录是否存,不存则创建
         /// </summary>
-        /// <param name="path">全路径根目录</param>
-        /// <param name="FileList">存放所有文件的全路径</param>
-        /// <param name="RelativePath"></param>
-        /// <returns></returns>
-        public static Dictionary<string, long> GetFile(string path, Dictionary<string, long> FileList, string RelativePath)
+        /// <param name="destFilePath">本地文件目录</param>
+        private void CreateDirectory(string path, string dic)
         {
-            DirectoryInfo dir = new DirectoryInfo(path);
-            FileInfo[] fil = dir.GetFiles();
-            DirectoryInfo[] dii = dir.GetDirectories();
-            foreach (FileInfo f in fil)
+            string[] dirs = dic.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries); //解析出路径上所有的文件名
+            string curDir = path;
+            foreach (string dir in dirs)
             {
-                //int size = Convert.ToInt32(f.Length);
-                long size = f.Length;
-                FileList.Add(f.FullName, size);//添加文件路径到列表中
+                curDir = Path.Combine(curDir, dir);
+                if (Directory.Exists(curDir) == false)
+                {
+                    Directory.CreateDirectory(curDir);//创建新路径
+                }
             }
-            //获取子文件夹内的文件列表，递归遍历
-            foreach (DirectoryInfo d in dii)
+        }
+        
+        /// <summary>
+        /// 初始化日志
+        /// </summary>
+        private static void InitLog()
+        {
+            //初始化日志文件 
+            if (!_initialized)
             {
-                GetFile(d.FullName, FileList, RelativePath);
+                var path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log");
+                var fi = new System.IO.FileInfo(path);
+                log4net.Config.XmlConfigurator.Configure(fi);
+
+                log4net.Appender.RollingFileAppender appender = new log4net.Appender.RollingFileAppender();
+                appender.File = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log", DateTime.Now.ToString("yyyyMMddHHmmss") + ".log");
+                appender.AppendToFile = true;
+                appender.MaxSizeRollBackups = 3;
+                appender.MaximumFileSize = "1MB";
+                appender.RollingStyle = log4net.Appender.RollingFileAppender.RollingMode.Size;
+                appender.StaticLogFileName = true;
+                appender.Layout = new log4net.Layout.PatternLayout("%date [%thread] %-5level - %message%newline");
+                appender.ActivateOptions();
+                log4net.Config.BasicConfigurator.Configure(appender);
+                log = log4net.LogManager.GetLogger("RollingLogFile");
+                _initialized = true;
             }
-            return FileList;
+
         }
     }
 }

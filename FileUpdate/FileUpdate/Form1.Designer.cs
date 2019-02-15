@@ -30,10 +30,10 @@
         {
             this.button1 = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.txtFileDir = new System.Windows.Forms.TextBox();
+            this.txtBackupDir = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.txtUpdateDir = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
@@ -59,19 +59,19 @@
             this.label1.TabIndex = 1;
             this.label1.Text = "原路径：";
             // 
-            // textBox1
+            // txtFileDir
             // 
-            this.textBox1.Location = new System.Drawing.Point(246, 64);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(349, 21);
-            this.textBox1.TabIndex = 2;
+            this.txtFileDir.Location = new System.Drawing.Point(246, 64);
+            this.txtFileDir.Name = "txtFileDir";
+            this.txtFileDir.Size = new System.Drawing.Size(349, 21);
+            this.txtFileDir.TabIndex = 2;
             // 
-            // textBox2
+            // txtBackupDir
             // 
-            this.textBox2.Location = new System.Drawing.Point(246, 113);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(349, 21);
-            this.textBox2.TabIndex = 4;
+            this.txtBackupDir.Location = new System.Drawing.Point(246, 113);
+            this.txtBackupDir.Name = "txtBackupDir";
+            this.txtBackupDir.Size = new System.Drawing.Size(349, 21);
+            this.txtBackupDir.TabIndex = 4;
             // 
             // label2
             // 
@@ -82,12 +82,12 @@
             this.label2.TabIndex = 3;
             this.label2.Text = "对比路径：";
             // 
-            // textBox3
+            // txtUpdateDir
             // 
-            this.textBox3.Location = new System.Drawing.Point(246, 163);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(349, 21);
-            this.textBox3.TabIndex = 6;
+            this.txtUpdateDir.Location = new System.Drawing.Point(246, 163);
+            this.txtUpdateDir.Name = "txtUpdateDir";
+            this.txtUpdateDir.Size = new System.Drawing.Size(349, 21);
+            this.txtUpdateDir.TabIndex = 6;
             // 
             // label3
             // 
@@ -136,11 +136,11 @@
             this.Controls.Add(this.button4);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
-            this.Controls.Add(this.textBox3);
+            this.Controls.Add(this.txtUpdateDir);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.textBox2);
+            this.Controls.Add(this.txtBackupDir);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.txtFileDir);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.button1);
             this.Name = "Form1";
@@ -155,10 +155,10 @@
 
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox txtFileDir;
+        private System.Windows.Forms.TextBox txtBackupDir;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.TextBox txtUpdateDir;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button button3;
