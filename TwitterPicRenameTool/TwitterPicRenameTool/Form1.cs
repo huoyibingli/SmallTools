@@ -42,7 +42,8 @@ namespace TwitterPicRenameTool
         {
             string folderName = Path.GetFileName(this.txtDicPath.Text);
             int count = 0;
-            if (folderName.ToUpper() == "TWITTER")
+            string folders = System.Configuration.ConfigurationManager.AppSettings["Folders"];
+            if (folders.Contains(folderName.ToLower()))
             {
                 DirectoryInfo root = new DirectoryInfo(this.txtDicPath.Text);
                 foreach (FileInfo file in root.GetFiles())
