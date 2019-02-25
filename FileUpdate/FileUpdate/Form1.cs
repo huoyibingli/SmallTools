@@ -27,9 +27,12 @@ namespace FileUpdate
         {
             InitLog();
             fileCount = 0;
-            txtFileDir.Text = @"G:\huoyibingli\pictures";
-            txtBackupDir.Text = @"G:\backup\huoyibingli\pictures";
-            txtUpdateDir.Text = @"G:\picupdate";
+            string filePath = System.Configuration.ConfigurationManager.AppSettings["FilePath"];
+            string backupPath = System.Configuration.ConfigurationManager.AppSettings["BackupPath"];
+            string updatePath = System.Configuration.ConfigurationManager.AppSettings["UpdataPath"];
+            txtFileDir.Text = string.IsNullOrEmpty(filePath) ? @"G:\huoyibingli\pictures" : filePath;
+            txtBackupDir.Text = string.IsNullOrEmpty(filePath) ? @"G:\backup\huoyibingli\pictures" : backupPath;
+            txtUpdateDir.Text = string.IsNullOrEmpty(filePath) ? @"G:\FileUpdate\huoyibingli\pictures" : updatePath;
         }
 
         #region "Select Dictionary"
