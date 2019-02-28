@@ -168,6 +168,7 @@ namespace FileUpdate
                 log4net.Config.XmlConfigurator.Configure(fi);
 
                 log4net.Appender.RollingFileAppender appender = new log4net.Appender.RollingFileAppender();
+                appender.Encoding = System.Text.Encoding.UTF8;
                 appender.File = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log", DateTime.Now.ToString("yyyyMMddHHmmss") + ".log");
                 appender.AppendToFile = true;
                 appender.MaxSizeRollBackups = 3;
