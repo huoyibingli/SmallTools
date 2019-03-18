@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TwitterPicRenameTool
+namespace FileRenameTool
 {
     public partial class Form1 : Form
     {
@@ -52,9 +52,11 @@ namespace TwitterPicRenameTool
                     {
                         string name = file.Name;
                         string fullName = file.FullName;
-                        if (name.EndsWith("_large"))
+                        string prefix = textBox1.Text;
+                        string replace = textBox2.Text;
+                        if (name.Contains(prefix)) //name.EndsWith("_large")
                         {
-                            string newName = name.Substring(0, name.Length - 6);
+                            string newName = name.Replace(prefix, replace); //name.Substring(0, name.Length - 6);
                             string newFullName = Path.Combine(this.txtDicPath.Text, newName);
                             if (File.Exists(newFullName))
                             {
