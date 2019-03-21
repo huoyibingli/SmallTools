@@ -131,8 +131,14 @@ namespace FileUpdate
             string backupPath = Path.Combine(txtBackupDir.Text, dic, fileName);
             string updatePath = Path.Combine(txtUpdateDir.Text, dic, fileName);
 
-            File.Copy(filePath, backupPath);
-            File.Copy(filePath, updatePath);
+            if (!File.Exists(backupPath))
+            {
+                File.Copy(filePath, backupPath);
+            }
+            if (!File.Exists(updatePath))
+            {
+                File.Copy(filePath, updatePath);
+            }
             fileCount++;
             log.Info("Copy File : " + filePath);
         }
