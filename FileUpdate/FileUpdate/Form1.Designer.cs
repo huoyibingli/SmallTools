@@ -53,11 +53,11 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(163, 67);
+            this.label1.Location = new System.Drawing.Point(127, 68);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(53, 12);
+            this.label1.Size = new System.Drawing.Size(89, 12);
             this.label1.TabIndex = 1;
-            this.label1.Text = "原路径：";
+            this.label1.Text = "保存文件路径：";
             // 
             // txtFileDir
             // 
@@ -76,11 +76,11 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(151, 116);
+            this.label2.Location = new System.Drawing.Point(127, 117);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(65, 12);
+            this.label2.Size = new System.Drawing.Size(89, 12);
             this.label2.TabIndex = 3;
-            this.label2.Text = "对比路径：";
+            this.label2.Text = "备份文件路径：";
             // 
             // txtUpdateDir
             // 
@@ -92,11 +92,11 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(91, 166);
+            this.label3.Location = new System.Drawing.Point(127, 166);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(125, 12);
+            this.label3.Size = new System.Drawing.Size(89, 12);
             this.label3.TabIndex = 5;
-            this.label3.Text = "原更新文件生成路径：";
+            this.label3.Text = "更新文件路径：";
             // 
             // button2
             // 

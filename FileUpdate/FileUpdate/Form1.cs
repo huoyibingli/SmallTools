@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -86,81 +87,55 @@ namespace FileUpdate
 
         private void Button1_Click(object sender, EventArgs e)
         {
-            CompareDirectory(txtFileDir.Text);
-            MessageBox.Show("更新完毕!共 " + fileCount + " 个文件");
-            fileCount = 0;
+            try
+            {
+                SyncFile(txtFileDir.Text);
+                MessageBox.Show("更新完毕!共 " + fileCount + " 个文件");
+                fileCount = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("同步出现错误：" + ex.Message + "\r\n已更新 " + fileCount + " 个文件");
+            }
+
         }
 
-        public void CompareDirectory(string dic)
+        /// <summary>
+        /// 同步文件
+        /// </summary>
+        /// <param name="fileSavePath">需要同步的初始文件夹</param>
+        public void SyncFile(string fileSavePath)
         {
-            string newDic = dic.Replace(txtFileDir.Text, "");
-            CompareFile(newDic.TrimStart('\\'));
-            DirectoryInfo root = new DirectoryInfo(Path.Combine(dic));
+            string newDic = fileSavePath.Replace(txtFileDir.Text, ""); // 文件保存路径下的文件夹路径
+            TransferFile(newDic.TrimStart('\\'));
+            DirectoryInfo root = new DirectoryInfo(fileSavePath);
             foreach (DirectoryInfo directory in root.GetDirectories())
             {
-                CompareDirectory(directory.FullName);
+                SyncFile(directory.FullName);
             }
         }
 
-        private void CompareFile(string dic)
+        /// <summary>
+        /// 转移文件
+        /// </summary>
+        /// <param name="dic">以文件保存路径为起始的文件夹路径</param>
+        private void TransferFile(string dic)
         {
             DirectoryInfo root = new DirectoryInfo(Path.Combine(txtFileDir.Text, dic));
             foreach (FileInfo file in root.GetFiles())
             {
                 string backupFilePath = Path.Combine(txtBackupDir.Text, dic, file.Name);
-                if (File.Exists(backupFilePath) == false)
+                if (FileOperation.FileExist(backupFilePath, file.FullName) == false)
                 {
-                    CopyFile(dic, file.Name);
+                    string updateFilePath = Path.Combine(txtUpdateDir.Text, dic, file.Name);
+                    FileOperation.FileCopy(file.FullName, backupFilePath);
+                    FileOperation.FileCopy(file.FullName, updateFilePath);
+                    fileCount++;
+                    log.Info("Copy File : " + file.FullName);
                 }
             }
         }
 
-        private void CopyFile(string dic, string fileName)
-        {
-            if (Directory.Exists(Path.Combine(txtBackupDir.Text, dic)) == false)
-            {
-                CreateDirectory(txtBackupDir.Text, dic);
-            }
-
-            if (Directory.Exists(Path.Combine(txtUpdateDir.Text, dic)) == false)
-            {
-                CreateDirectory(txtUpdateDir.Text, dic);
-            }
-
-            string filePath = Path.Combine(txtFileDir.Text, dic, fileName);
-            string backupPath = Path.Combine(txtBackupDir.Text, dic, fileName);
-            string updatePath = Path.Combine(txtUpdateDir.Text, dic, fileName);
-
-            if (!File.Exists(backupPath))
-            {
-                File.Copy(filePath, backupPath);
-            }
-            if (!File.Exists(updatePath))
-            {
-                File.Copy(filePath, updatePath);
-            }
-            fileCount++;
-            log.Info("Copy File : " + filePath);
-        }
-
-        /// <summary>
-        /// 判断文件的目录是否存,不存则创建
-        /// </summary>
-        /// <param name="destFilePath">本地文件目录</param>
-        private void CreateDirectory(string path, string dic)
-        {
-            string[] dirs = dic.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries); //解析出路径上所有的文件名
-            string curDir = path;
-            foreach (string dir in dirs)
-            {
-                curDir = Path.Combine(curDir, dir);
-                if (Directory.Exists(curDir) == false)
-                {
-                    Directory.CreateDirectory(curDir);//创建新路径
-                }
-            }
-        }
-        
         /// <summary>
         /// 初始化日志
         /// </summary>
@@ -189,5 +164,81 @@ namespace FileUpdate
             }
 
         }
+    }
+
+    public class FileOperation
+    {
+        /// <summary>
+        /// 判断文件的目录是否存,不存则创建
+        /// </summary>
+        /// <param name="targetPath">目录</param>
+        private static void CreateDirectory(string targetPath)
+        {
+            string[] dirs = targetPath.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries); //解析出路径上所有的文件名
+            string curDir = dirs[0];
+            for (int i = 1; i < dirs.Length; i++)
+            {
+                curDir += "\\" + dirs[i];
+                if (Directory.Exists(curDir) == false)
+                {
+                    Directory.CreateDirectory(curDir);//创建新路径
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 文件是否存在
+        /// </summary>
+        /// <param name="sourcePath">源文件路径,文件存在</param>
+        /// <param name="targetPath">目标文件路径</param>
+        /// <param name="delete">目标文件与源文件不相同时，是否删除</param>
+        public static bool FileExist(string targetPath, string sourcePath = null, bool delete = true)
+        {
+            bool isExist = false;
+            if (sourcePath == null)
+            {
+                isExist = File.Exists(targetPath);
+            }
+            else
+            {
+                if (File.Exists(targetPath))
+                {
+                    //创建一个哈希算法对象 
+                    using (HashAlgorithm hash = HashAlgorithm.Create())
+                    {
+                        using (FileStream sourceFile = new FileStream(sourcePath, FileMode.Open), targetFile = new FileStream(targetPath, FileMode.Open))
+                        {
+                            byte[] sourcehashByte = hash.ComputeHash(sourceFile);//哈希算法根据文本得到哈希码的字节数组 
+                            byte[] targethashByte = hash.ComputeHash(targetFile);
+                            string str1 = BitConverter.ToString(sourcehashByte);//将字节数组装换为字符串 
+                            string str2 = BitConverter.ToString(targethashByte);
+                            isExist = str1 == str2;//比较哈希码 
+                        }
+                    }
+                    if (!isExist && delete) File.Delete(targetPath);
+                }
+            }
+            
+            return isExist;
+        }
+
+        /// <summary>
+        /// 复制文件
+        /// </summary>
+        /// <param name="sourcePath">源文件路径</param>
+        /// <param name="targetPath">目标文件路径</param>
+        public static void FileCopy(string sourcePath, string targetPath)
+        {
+            if (!FileExist(targetPath,sourcePath))
+            {
+                string targetDic = Path.GetDirectoryName(targetPath);
+                if (Directory.Exists(Path.GetDirectoryName(targetDic)) == false)
+                {
+                    CreateDirectory(targetDic);
+                }
+                File.Copy(sourcePath, targetPath);
+            } 
+        }
+        
     }
 }
