@@ -70,7 +70,7 @@ namespace IceItem.Core
             if (!FileExist(targetPath, sourcePath))
             {
                 string targetDic = Path.GetDirectoryName(targetPath);
-                if (Directory.Exists(Path.GetDirectoryName(targetDic)) == false)
+                if (Directory.Exists(targetDic) == false)
                 {
                     CreateDirectory(targetDic);
                 }
