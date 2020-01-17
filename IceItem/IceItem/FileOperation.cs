@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -79,6 +81,49 @@ namespace IceItem
                     CreateDirectory(targetDic);
                 }
                 File.Copy(sourcePath, targetPath);
+            }
+        }
+
+
+        /// <summary>
+        /// 复制文件
+        /// </summary>
+        /// <param name="url">源文件路径</param>
+        /// <param name="targetDic">目标文件路径</param>
+        public static void FileUrlCopy(string url, string targetDic, string fileName = null)
+        {
+            if (Directory.Exists(targetDic) == false)
+            {
+                CreateDirectory(targetDic);
+            }
+
+            string fileTempPath = Path.Combine(targetDic, fileName ?? Path.GetFileName(url));
+            if (FileExist(fileTempPath)) return;
+
+            using (HttpClient client = new HttpClient())
+            {
+                var t = client.GetByteArrayAsync(WebUtility.UrlDecode(url)).Result;
+                Stream responseStream = new MemoryStream(t);
+
+                long allLenght = responseStream.Length;
+                int package = 10248;//特殊的包大小
+
+                byte[] by = new byte[package];
+                FileStream writeFile = new FileStream(fileTempPath, FileMode.Append);
+
+                while (true)
+                {
+                    int l = responseStream.Read(by, 0, (int)by.Length);
+                    if (l == 0) break;
+                    writeFile.Write(by, 0, l);
+                }
+
+                //全部上传完成
+                if (allLenght == responseStream.Position)
+                {
+                    writeFile.Flush();
+                    writeFile.Close();
+                }
             }
         }
     }

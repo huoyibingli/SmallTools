@@ -20,7 +20,7 @@ namespace FileRenameTool
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            this.txtDicPath.Text = @"G:\Twitter";
+            this.txtDicPath.Text = @"E:\Twitter";
         }
 
         private void btnSelectPath_Click(object sender, EventArgs e)
