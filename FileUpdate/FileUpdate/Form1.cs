@@ -23,7 +23,6 @@ namespace FileUpdate
         public static log4net.ILog log;
         private int fileCount;
 
-
         private void Form1_Load(object sender, EventArgs e)
         {
             InitLog();
@@ -126,7 +125,10 @@ namespace FileUpdate
             foreach (FileInfo file in root.GetFiles())
             {
                 string backupFilePath = Path.Combine(txtBackupDir.Text, dic, file.Name);
-                if (IceItem.FileOperation.FileExist(backupFilePath, file.FullName) == false)
+                bool isVerifyConsistency = Convert.ToBoolean(System.Configuration.ConfigurationManager.AppSettings["IsVerifyConsistency"]);
+                bool isExist = isVerifyConsistency ? IceItem.FileOperation.FileExist(backupFilePath, file.FullName) : IceItem.FileOperation.FileExist(backupFilePath);
+
+                if (isExist == false)
                 {
                     string updateFilePath = Path.Combine(txtUpdateDir.Text, dic, file.Name);
                     IceItem.FileOperation.FileCopy(file.FullName, backupFilePath);
