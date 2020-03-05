@@ -16,7 +16,7 @@ namespace IceItem
         /// 判断文件的目录是否存,不存则创建
         /// </summary>
         /// <param name="targetPath">目录</param>
-        private static void CreateDirectory(string targetPath)
+        public static void CreateDirectory(string targetPath)
         {
             string[] dirs = targetPath.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries); //解析出路径上所有的文件名
             string curDir = dirs[0];
