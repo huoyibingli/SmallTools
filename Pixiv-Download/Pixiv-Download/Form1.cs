@@ -73,7 +73,8 @@ namespace Pixiv_Download
                     }
                     catch (Exception ex)
                     {
-                        if (checkBox1.Checked) 
+                        bool mutiDownload = false;
+                        if (checkBox1.Checked)
                         {
                             try
                             {
@@ -84,10 +85,11 @@ namespace Pixiv_Download
                                 HtmlNode paragraph = document.DocumentNode.SelectSingleNode("//p");
                                 string content = paragraph.InnerText;
                                 string picCount = Regex.Match(content, @"\d+").Value;
-                                picTotal += int.Parse(picCount);
                                 // Displays a message box asking the user to choose Yes or No.
                                 if (MessageBox.Show("是否下载 " + pid + " 里面的 " + picCount + " 张图片", "Continue", MessageBoxButtons.YesNo) == DialogResult.Yes)
                                 {
+                                    picTotal += int.Parse(picCount) - 1;
+                                    mutiDownload = true;
                                     // Do something after the No button was clicked by user.
                                     for (int i = 1; i < int.Parse(picCount) + 1; i++)
                                     {
@@ -108,7 +110,10 @@ namespace Pixiv_Download
                         }
 
                         log.Error($"图片下载错误！pid：{pid},{ex.Message}");
-                        faliCount++;
+                        if (!mutiDownload)
+                        {
+                            faliCount++;
+                        }
                     }
                     label3.Text = string.Format(processFormat, picTotal, successCount + faliCount);
                 }
