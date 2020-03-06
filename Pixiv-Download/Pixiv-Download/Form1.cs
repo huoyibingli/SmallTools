@@ -95,9 +95,12 @@ namespace Pixiv_Download
                                     {
                                         url = string.Format(this.urlFormat, pid + "-" + i);
                                         filePath = Path.Combine(textBox2.Text, pid + "-" + i + ".png");
-                                        if (IceItem.FileOperation.FileExist(filePath)) continue;
-                                        IceItem.FileOperation.FileUrlCopy(url, textBox2.Text);
+                                        if (!IceItem.FileOperation.FileExist(filePath))
+                                        {
+                                            IceItem.FileOperation.FileUrlCopy(url, textBox2.Text);
+                                        }
                                         successCount++;
+                                        label3.Text = string.Format(processFormat, picTotal, successCount + faliCount);
                                     }
                                 }
                                 else
@@ -106,12 +109,15 @@ namespace Pixiv_Download
                                 }
                             }
                             catch (Exception)
-                            { }
+                            {
+                                log.Error($"图片下载错误！pid：{pid},{ex.Message}");
+                                faliCount++;
+                            }
                         }
 
-                        log.Error($"图片下载错误！pid：{pid},{ex.Message}");
                         if (!mutiDownload)
                         {
+                            log.Error($"图片下载错误！pid：{pid},{ex.Message}");
                             faliCount++;
                         }
                     }
