@@ -21,10 +21,13 @@ namespace Pixiv_Download
         {
             InitializeComponent();
         }
-
+        private static string processFormat = "共 {0} 张，已下载 {1} 张";
         private string urlFormat;
-        public static bool _initialized = false;
-        public static log4net.ILog log;
+        private static bool _initialized = false;
+        private static log4net.ILog log;
+        private int picTotal = 0;
+        private int successCount = 0;
+        private int faliCount = 0;
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -33,101 +36,192 @@ namespace Pixiv_Download
             urlFormat = System.Configuration.ConfigurationManager.AppSettings["proxyUrlFormat"];
             textBox2.Text = System.Configuration.ConfigurationManager.AppSettings["defaultPath"];
             label3.Text = string.Empty;
+            textBox1.Text = "71821444\r\n61524814\r\n75793418";
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(textBox1.Text) || string.IsNullOrEmpty(textBox2.Text)) 
+            if (string.IsNullOrEmpty(textBox1.Text) || string.IsNullOrEmpty(textBox2.Text))
             {
                 MessageBox.Show("路径和id不能为空！");
                 return;
             }
 
-            if (IceItem.FileOperation.FileExist(textBox2.Text)) 
+            if (IceItem.FileOperation.FileExist(textBox2.Text))
             {
                 IceItem.FileOperation.CreateDirectory(textBox2.Text);
             }
 
             string[] pidArray = textBox1.Text.Split(new string[] { ",", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-            string url = string.Empty;
-            string filePath = string.Empty;
-            int picTotal = pidArray.Length;
-            int successCount = 0;
-            int faliCount = 0;
-            string processFormat = "共 {0} 张，已下载 {1} 张";
+            picTotal = pidArray.Length;
+            successCount = 0;
+            faliCount = 0;
             label3.Text = string.Format(processFormat, picTotal, successCount + faliCount);
+
+            foreach (string pid in pidArray)
+            {
+                PidDownload(pid);
+
+                // 先请求一次确定图片数量，然后返回下载列表
+                //PidDownloadTest(pid);
+            }
+            MessageBox.Show($"成功 {successCount},失败 {faliCount}!");
+
+        }
+
+        #region "下载1"
+
+        private void PidDownload(string pid)
+        {
+            string url = string.Format(this.urlFormat, pid);
+            string filePath = Path.Combine(textBox2.Text, pid + ".png");
+            if (IceItem.FileOperation.FileExist(filePath))
+            {
+                successCount++;
+            }
+            else
+            {
+                try
+                {
+                    IceItem.FileOperation.FileUrlCopy(url, textBox2.Text);
+                    successCount++;
+                }
+                catch (Exception ex)
+                {
+                    bool mutiDownload = false;
+                    if (checkBox1.Checked)
+                    {
+                        mutiDownload = MutiDownload(pid);
+                    }
+
+                    if (!mutiDownload)
+                    {
+                        log.Error($"图片下载错误！pid：{pid},{ex.Message}");
+                        faliCount++;
+                    }
+                }
+            }
+            label3.Text = string.Format(processFormat, picTotal, successCount + faliCount);
+        }
+
+        private bool MutiDownload(string pid)
+        {
+            bool mutiDownload = false;
+            string pidNo = string.Empty;
 
             using (HttpClient client = new HttpClient())
             {
-                foreach (string pid in pidArray)
+                try
                 {
-                    url = string.Format(this.urlFormat, pid);
-                    filePath = Path.Combine(textBox2.Text, pid + ".png");
-                    if (IceItem.FileOperation.FileExist(filePath)) continue;
-
-                    try
+                    string url = string.Format(this.urlFormat, pid);
+                    var t = client.GetAsync(url).Result;
+                    string result = t.Content.ReadAsStringAsync().Result;
+                    HtmlDocument document = new HtmlDocument();
+                    document.LoadHtml(result);
+                    HtmlNode paragraph = document.DocumentNode.SelectSingleNode("//p");
+                    string content = paragraph.InnerText;
+                    string picCount = Regex.Match(content, @"\d+").Value;
+                    // Displays a message box asking the user to choose Yes or No.
+                    if (MessageBox.Show("是否下载 " + pid + " 里面的 " + picCount + " 张图片", "Continue", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
+                        picTotal += int.Parse(picCount) - 1;
+                        mutiDownload = true;
+                        // Do something after the No button was clicked by user.
+                        for (int i = 1; i < int.Parse(picCount) + 1; i++)
+                        {
+                            pidNo = pid + "-" + i;
+                            url = string.Format(this.urlFormat, pidNo);
+                            string filePath = Path.Combine(textBox2.Text, pidNo + ".png");
+                            if (!IceItem.FileOperation.FileExist(filePath))
+                            {
+                                IceItem.FileOperation.FileUrlCopy(url, textBox2.Text);
+                            }
+                            successCount++;
+                            label3.Text = string.Format(processFormat, picTotal, successCount + faliCount);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (mutiDownload)
+                    {
+                        log.Error($"图片下载错误！pid：{pidNo},{ex.Message}");
+                        faliCount++;
+                    }
+                }
+            }
+            return mutiDownload;
+        }
+
+        #endregion
+
+        #region "下载2"
+
+        private void PidDownloadTest(string singlePid)
+        {
+            List<string> pidList = GetPidList(singlePid);
+            foreach (string pid in pidList)
+            {
+                try
+                {
+                    string filePath = Path.Combine(textBox2.Text, pid + ".png");
+                    if (!IceItem.FileOperation.FileExist(filePath))
+                    {
+                        string url = string.Format(this.urlFormat, pid);
                         IceItem.FileOperation.FileUrlCopy(url, textBox2.Text);
                         successCount++;
                     }
-                    catch (Exception ex)
-                    {
-                        bool mutiDownload = false;
-                        if (checkBox1.Checked)
-                        {
-                            try
-                            {
-                                var t = client.GetAsync(url).Result;
-                                string result = t.Content.ReadAsStringAsync().Result;
-                                HtmlDocument document = new HtmlDocument();
-                                document.LoadHtml(result);
-                                HtmlNode paragraph = document.DocumentNode.SelectSingleNode("//p");
-                                string content = paragraph.InnerText;
-                                string picCount = Regex.Match(content, @"\d+").Value;
-                                // Displays a message box asking the user to choose Yes or No.
-                                if (MessageBox.Show("是否下载 " + pid + " 里面的 " + picCount + " 张图片", "Continue", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                                {
-                                    picTotal += int.Parse(picCount) - 1;
-                                    mutiDownload = true;
-                                    // Do something after the No button was clicked by user.
-                                    for (int i = 1; i < int.Parse(picCount) + 1; i++)
-                                    {
-                                        url = string.Format(this.urlFormat, pid + "-" + i);
-                                        filePath = Path.Combine(textBox2.Text, pid + "-" + i + ".png");
-                                        if (!IceItem.FileOperation.FileExist(filePath))
-                                        {
-                                            IceItem.FileOperation.FileUrlCopy(url, textBox2.Text);
-                                        }
-                                        successCount++;
-                                        label3.Text = string.Format(processFormat, picTotal, successCount + faliCount);
-                                    }
-                                }
-                                else
-                                {
-                                    // Do something after the Yes button was clicked by user.
-                                }
-                            }
-                            catch (Exception)
-                            {
-                                log.Error($"图片下载错误！pid：{pid},{ex.Message}");
-                                faliCount++;
-                            }
-                        }
-
-                        if (!mutiDownload)
-                        {
-                            log.Error($"图片下载错误！pid：{pid},{ex.Message}");
-                            faliCount++;
-                        }
-                    }
-                    label3.Text = string.Format(processFormat, picTotal, successCount + faliCount);
                 }
+                catch (Exception ex)
+                {
+                    log.Error($"图片下载错误！pid：{pid},{ex.Message}");
+                    faliCount++;
+                }
+                label3.Text = string.Format(processFormat, picTotal, successCount + faliCount);
             }
-            MessageBox.Show($"成功 {successCount},失败 {faliCount}!");
-            
         }
 
+        private List<string> GetPidList(string singlePid)
+        {
+            List<string> pidList = new List<string>() { singlePid };
+
+            using (HttpClient client = new HttpClient())
+            {
+                string url = string.Format(this.urlFormat, singlePid);
+
+                try
+                {
+                    var t = client.GetByteArrayAsync(url).Result;
+                }
+                catch (Exception)
+                {
+                    var t = client.GetAsync(url).Result;
+                    string result = t.Content.ReadAsStringAsync().Result;
+                    HtmlDocument document = new HtmlDocument();
+                    document.LoadHtml(result);
+                    HtmlNode paragraph = document.DocumentNode.SelectSingleNode("//p");
+                    string content = paragraph.InnerText;
+                    string picCount = Regex.Match(content, @"\d+").Value;
+                    // Displays a message box asking the user to choose Yes or No.
+                    if (MessageBox.Show("是否下载 " + singlePid + " 里面的 " + picCount + " 张图片", "Continue", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        pidList = new List<string>();
+                        picTotal += int.Parse(picCount) - 1;
+                        // Do something after the No button was clicked by user.
+                        for (int i = 1; i < int.Parse(picCount) + 1; i++)
+                        {
+                            pidList.Add(singlePid + "-" + i);
+                        }
+                    }
+                }
+            }
+
+
+            return pidList;
+        }
+
+        #endregion
 
         private void button2_Click(object sender, EventArgs e)
         {
