@@ -36,7 +36,6 @@ namespace Pixiv_Download
             urlFormat = System.Configuration.ConfigurationManager.AppSettings["proxyUrlFormat"];
             textBox2.Text = System.Configuration.ConfigurationManager.AppSettings["defaultPath"];
             label3.Text = string.Empty;
-            textBox1.Text = "71821444\r\n61524814\r\n75793418";
         }
 
         private void button1_Click(object sender, EventArgs e)
