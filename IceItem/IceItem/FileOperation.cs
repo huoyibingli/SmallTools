@@ -92,38 +92,52 @@ namespace IceItem
         /// <param name="targetDic">目标文件路径</param>
         public static void FileUrlCopy(string url, string targetDic, string fileName = null)
         {
-            if (Directory.Exists(targetDic) == false)
-            {
-                CreateDirectory(targetDic);
-            }
-
-            string fileTempPath = Path.Combine(targetDic, fileName ?? Path.GetFileName(url));
+            fileName = fileName ?? Path.GetFileName(url);
+            string fileTempPath = Path.Combine(targetDic, fileName);
             if (FileExist(fileTempPath)) return;
 
             using (HttpClient client = new HttpClient())
             {
                 var t = client.GetByteArrayAsync(WebUtility.UrlDecode(url)).Result;
-                Stream responseStream = new MemoryStream(t);
+                FileByteCopy(t, targetDic, fileName);
+            }
+        }
 
-                long allLenght = responseStream.Length;
-                int package = 10248;//特殊的包大小
+        /// <summary>
+        /// 复制文件
+        /// </summary>
+        /// <param name="bytes">文件字节</param>
+        /// <param name="targetDic">目标路径</param>
+        /// <param name="fileName">文件名</param>
+        public static void FileByteCopy(byte[] bytes, string targetDic, string fileName)
+        {
+            if (Directory.Exists(targetDic) == false)
+            {
+                CreateDirectory(targetDic);
+            }
+            string fileTempPath = Path.Combine(targetDic, fileName);
+            if (FileExist(fileTempPath)) return;
 
-                byte[] by = new byte[package];
-                FileStream writeFile = new FileStream(fileTempPath, FileMode.Append);
+            Stream responseStream = new MemoryStream(bytes);
 
-                while (true)
-                {
-                    int l = responseStream.Read(by, 0, (int)by.Length);
-                    if (l == 0) break;
-                    writeFile.Write(by, 0, l);
-                }
+            long allLenght = responseStream.Length;
+            int package = 10248;//特殊的包大小
 
-                //全部上传完成
-                if (allLenght == responseStream.Position)
-                {
-                    writeFile.Flush();
-                    writeFile.Close();
-                }
+            byte[] by = new byte[package];
+            FileStream writeFile = new FileStream(fileTempPath, FileMode.Append);
+
+            while (true)
+            {
+                int l = responseStream.Read(by, 0, (int)by.Length);
+                if (l == 0) break;
+                writeFile.Write(by, 0, l);
+            }
+
+            //全部上传完成
+            if (allLenght == responseStream.Position)
+            {
+                writeFile.Flush();
+                writeFile.Close();
             }
         }
     }

@@ -61,10 +61,10 @@ namespace Pixiv_Download
 
             foreach (string pid in pidArray)
             {
-                PidDownload(pid);
+                //PidDownload(pid);
 
                 // 先请求一次确定图片数量，然后返回下载列表
-                //PidDownloadTest(pid);
+                PidDownloadTest(pid);
             }
             MessageBox.Show($"成功 {successCount},失败 {faliCount}!");
 
@@ -158,28 +158,38 @@ namespace Pixiv_Download
 
         #region "下载2"
 
+        private byte[] fileBytes = null;
         private void PidDownloadTest(string singlePid)
         {
             List<string> pidList = GetPidList(singlePid);
-            foreach (string pid in pidList)
+
+            if (pidList.Count == 1)
             {
-                try
+                IceItem.FileOperation.FileByteCopy(fileBytes, textBox2.Text, pidList[0] + ".png");
+                successCount++;
+                label3.Text = string.Format(processFormat, picTotal, successCount + faliCount);
+                fileBytes = null;
+            }
+            else 
+            {
+                foreach (string pid in pidList)
                 {
-                    string filePath = Path.Combine(textBox2.Text, pid + ".png");
-                    if (!IceItem.FileOperation.FileExist(filePath))
+                    try
                     {
+                        string filePath = Path.Combine(textBox2.Text, pid + ".png");
                         string url = string.Format(this.urlFormat, pid);
                         IceItem.FileOperation.FileUrlCopy(url, textBox2.Text);
                         successCount++;
                     }
+                    catch (Exception ex)
+                    {
+                        log.Error($"图片下载错误！pid：{pid},{ex.Message}");
+                        faliCount++;
+                    }
+                    label3.Text = string.Format(processFormat, picTotal, successCount + faliCount);
                 }
-                catch (Exception ex)
-                {
-                    log.Error($"图片下载错误！pid：{pid},{ex.Message}");
-                    faliCount++;
-                }
-                label3.Text = string.Format(processFormat, picTotal, successCount + faliCount);
             }
+            label3.Text = string.Format(processFormat, picTotal, successCount + faliCount);
         }
 
         private List<string> GetPidList(string singlePid)
@@ -192,31 +202,45 @@ namespace Pixiv_Download
 
                 try
                 {
-                    var t = client.GetByteArrayAsync(url).Result;
+                    fileBytes = client.GetByteArrayAsync(url).Result;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    var t = client.GetAsync(url).Result;
-                    string result = t.Content.ReadAsStringAsync().Result;
-                    HtmlDocument document = new HtmlDocument();
-                    document.LoadHtml(result);
-                    HtmlNode paragraph = document.DocumentNode.SelectSingleNode("//p");
-                    string content = paragraph.InnerText;
-                    string picCount = Regex.Match(content, @"\d+").Value;
-                    // Displays a message box asking the user to choose Yes or No.
-                    if (MessageBox.Show("是否下载 " + singlePid + " 里面的 " + picCount + " 张图片", "Continue", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    pidList = new List<string>();
+                    if (checkBox1.Checked)
                     {
-                        pidList = new List<string>();
-                        picTotal += int.Parse(picCount) - 1;
-                        // Do something after the No button was clicked by user.
-                        for (int i = 1; i < int.Parse(picCount) + 1; i++)
+                        var t = client.GetAsync(url).Result;
+                        string result = t.Content.ReadAsStringAsync().Result;
+                        HtmlDocument document = new HtmlDocument();
+                        document.LoadHtml(result);
+                        HtmlNode paragraph = document.DocumentNode.SelectSingleNode("//p");
+                        string content = paragraph.InnerText;
+                        string picCount = Regex.Match(content, @"\d+").Value;
+
+                        // Displays a message box asking the user to choose Yes or No.
+                        if (MessageBox.Show("是否下载 " + singlePid + " 里面的 " + picCount + " 张图片", "Continue", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
-                            pidList.Add(singlePid + "-" + i);
+                            picTotal += int.Parse(picCount) - 1;
+                            // Do something after the No button was clicked by user.
+                            for (int i = 1; i < int.Parse(picCount) + 1; i++)
+                            {
+                                pidList.Add(singlePid + "-" + i);
+                            }
+                        }
+                        else
+                        {
+                            log.Error($"图片下载错误！pid：{singlePid},{ex.Message}");
+                            faliCount++;
                         }
                     }
+                    else
+                    {
+                        log.Error($"图片下载错误！pid：{singlePid},{ex.Message}");
+                        faliCount++;
+                    }
+
                 }
             }
-
 
             return pidList;
         }
