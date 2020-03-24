@@ -31,9 +31,8 @@ namespace FileUpdate
             string backupPath = System.Configuration.ConfigurationManager.AppSettings["BackupPath"];
             string updatePath = System.Configuration.ConfigurationManager.AppSettings["UpdataPath"];
             txtFileDir.Text = string.IsNullOrEmpty(filePath) ? @"G:\huoyibingli\pictures" : filePath;
-            txtBackupDir.Text = string.IsNullOrEmpty(filePath) ? @"G:\backup\huoyibingli\pictures" : backupPath;
-            txtUpdateDir.Text = string.IsNullOrEmpty(filePath) ? @"G:\FileUpdate\huoyibingli\pictures" : updatePath;
-            textBox2.Text = "E:\\new";
+            txtBackupDir.Text = string.IsNullOrEmpty(backupPath) ? @"G:\backup\huoyibingli\pictures" : backupPath;
+            txtUpdateDir.Text = updatePath;
         }
 
         #region "Select Dictionary"
@@ -130,9 +129,12 @@ namespace FileUpdate
 
                 if (isExist == false)
                 {
-                    string updateFilePath = Path.Combine(txtUpdateDir.Text, dic, file.Name);
                     IceItem.FileOperation.FileCopy(file.FullName, backupFilePath);
-                    IceItem.FileOperation.FileCopy(file.FullName, updateFilePath);
+                    if (!string.IsNullOrEmpty(txtUpdateDir.Text))
+                    {
+                        string updateFilePath = Path.Combine(txtUpdateDir.Text, dic, file.Name);
+                        IceItem.FileOperation.FileCopy(file.FullName, updateFilePath);
+                    }
                     fileCount++;
                     log.Info("Copy File : " + file.FullName);
                 }
@@ -166,31 +168,6 @@ namespace FileUpdate
                 _initialized = true;
             }
 
-        }
-
-        private void button5_Click(object sender, EventArgs e)
-        {
-            string[] urlArray = textBox1.Text.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            int successCount = 0;
-            int faliCount = 0;
-            List<string> failUrlList = new List<string>();
-            foreach (string url in urlArray)
-            {
-                try
-                {
-                    IceItem.FileOperation.FileUrlCopy(url, textBox2.Text);
-                    log.Info("下载图片：" + Path.GetFileName(url));
-                    successCount++;
-                }
-                catch (Exception ex)
-                {
-                    failUrlList.Add(url);
-                    faliCount++;
-                }
-
-            }
-            log.Info("下载失败：" + string.Join(",", failUrlList));
-            MessageBox.Show($"下载完成：共 {successCount}个，失败 {faliCount}个！");
         }
     }
 }
